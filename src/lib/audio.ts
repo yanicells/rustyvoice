@@ -8,6 +8,11 @@ export interface AudioDevice {
   name: string
 }
 
+async function readOutput(stream: ReadableStream<Uint8Array> | number | undefined | null): Promise<string> {
+  if (!stream || typeof stream === 'number') return ''
+  return new Response(stream).text()
+}
+
 export function parseAvfoundationDevices(stderr: string): AudioDevice[] {
   const lines = stderr.split(/\r?\n/)
   const devices: AudioDevice[] = []
@@ -41,7 +46,7 @@ export async function listAudioDevices(ffmpegPath: string): Promise<AudioDevice[
     stdout: 'ignore',
     stderr: 'pipe',
   })
-  const stderr = await new Response(proc.stderr).text()
+  const stderr = await readOutput(proc.stderr)
   await proc.exited
   return parseAvfoundationDevices(stderr)
 }
@@ -109,7 +114,7 @@ export async function stopRecording(): Promise<{ stderr: string }> {
   recorder = null
   if (!proc) return { stderr: '' }
   proc.kill('SIGINT')
-  const stderr = await new Response(proc.stderr).text()
+  const stderr = await readOutput(proc.stderr)
   const code = await proc.exited
   if (code !== 0 && code !== 255 && stderr.trim()) {
     throw new Error(stderr.trim().split('\n').slice(-3).join('\n'))
@@ -139,7 +144,7 @@ export async function concatWavs(ffmpegPath: string, inputs: string[], outPath: 
       [ffmpegPath, '-hide_banner', '-loglevel', 'error', '-y', '-i', inputs[0], '-ac', '1', '-ar', '48000', '-c:a', 'pcm_s16le', outPath],
       { stdout: 'ignore', stderr: 'pipe' },
     )
-    const stderr = await new Response(proc.stderr).text()
+    const stderr = await readOutput(proc.stderr)
     const code = await proc.exited
     if (code !== 0) throw new Error(stderr.trim() || 'ffmpeg failed')
     return
@@ -170,7 +175,7 @@ export async function concatWavs(ffmpegPath: string, inputs: string[], outPath: 
     ],
     { stdout: 'ignore', stderr: 'pipe' },
   )
-  const stderr = await new Response(proc.stderr).text()
+  const stderr = await readOutput(proc.stderr)
   const code = await proc.exited
   if (code !== 0) throw new Error(stderr.trim() || 'ffmpeg concat failed')
 }
@@ -180,7 +185,7 @@ export async function importWav(ffmpegPath: string, src: string, dest: string): 
     [ffmpegPath, '-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-ac', '1', '-ar', '48000', '-c:a', 'pcm_s16le', dest],
     { stdout: 'ignore', stderr: 'pipe' },
   )
-  const stderr = await new Response(proc.stderr).text()
+  const stderr = await readOutput(proc.stderr)
   const code = await proc.exited
   if (code !== 0) throw new Error(stderr.trim() || 'Could not import that audio file')
 }
@@ -195,7 +200,7 @@ export async function pickAudioFile(): Promise<string | null> {
     ],
     { stdout: 'pipe', stderr: 'ignore' },
   )
-  const out = (await new Response(proc.stdout).text()).trim()
+  const out = (await readOutput(proc.stdout)).trim()
   await proc.exited
   return out.length > 0 ? out : null
 }
