@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+data/
+tmp/
+.env
+.env.*
+*.wav
+!src/assets/**
+.bun/
+coverage/
