@@ -75,12 +75,12 @@ export function SettingsPage({
           </div>
 
           <text style={{ fontSize: 12, fontWeight: 500, color: C.ghost, paddingTop: 8 }}>Synthesis</text>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
             <NumField label="Seed" value={settings.seed} onChange={(seed) => patch({ seed })} />
             <NumField label="CFG" value={settings.cfg} onChange={(cfg) => patch({ cfg })} />
             <NumField label="Timesteps" value={settings.timesteps} onChange={(timesteps) => patch({ timesteps })} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
             <NumField label="Temperature" value={settings.temperature} onChange={(temperature) => patch({ temperature })} />
             <NumField label="Max steps" value={settings.maxSteps} onChange={(maxSteps) => patch({ maxSteps })} />
             <NumField label="GPU layers" value={settings.nGpuLayers} onChange={(nGpuLayers) => patch({ nGpuLayers })} />

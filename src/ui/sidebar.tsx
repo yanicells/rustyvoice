@@ -48,9 +48,9 @@ export function Sidebar({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 8, paddingRight: 8 }}>
-        <NavItem icon="message" label="Speak" active={page === 'speak'} onClick={() => onPage('speak')} />
-        <NavItem icon="users" label="Voices" active={page === 'voices' || page === 'create'} onClick={() => onPage('voices')} />
-        <NavItem icon="settings" label="Settings" active={page === 'settings'} onClick={() => onPage('settings')} />
+        <NavItem icon="message" label="Speak" active={page === 'speak'} onClick={() => onPage('speak')} testId="nav-speak" />
+        <NavItem icon="users" label="Voices" active={page === 'voices' || page === 'create'} onClick={() => onPage('voices')} testId="nav-voices" />
+        <NavItem icon="settings" label="Settings" active={page === 'settings'} onClick={() => onPage('settings')} testId="nav-settings" />
       </div>
 
       <div style={{ height: 14, flexShrink: 0 }} />
@@ -108,14 +108,17 @@ function NavItem({
   label,
   active,
   onClick,
+  testId,
 }: {
   icon: 'message' | 'users' | 'settings'
   label: string
   active: boolean
   onClick: () => void
+  testId?: string
 }) {
   return (
     <div
+      testId={testId}
       style={{
         display: 'flex',
         flexDirection: 'row',

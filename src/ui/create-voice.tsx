@@ -167,7 +167,7 @@ export function CreateVoicePage({
               <text style={{ fontSize: 13.5, lineHeight: 20, color: C.secondary }}>
                 Read Harvard sentences in a quiet room, one line at a time. Quick is three lines. Full is the first IEEE list of ten.
               </text>
-              <Field label="Name" value={name} placeholder="Yani" onChange={setName} />
+              <Field label="Name" value={name} placeholder="Voice name" onChange={setName} />
               <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
                 <ScriptCard
                   title="Quick"
@@ -182,7 +182,7 @@ export function CreateVoicePage({
                   onClick={() => setScript('full')}
                 />
               </div>
-              <Button label="Start recording" icon="mic" variant="primary" onClick={begin} />
+              <Button label="Start recording" icon="mic" variant="primary" testId="start-record" onClick={begin} />
             </>
           ) : phrase ? (
             <>

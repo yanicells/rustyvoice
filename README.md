@@ -1,6 +1,6 @@
 # Clone
 
-Local voice cloning studio. Native GPU UI via [GPUIX](https://github.com/remorses/gpuix). Synthesis via [VoxCPM2](https://github.com/OpenBMB/VoxCPM) through `voxcpm2-cli` from llama.cpp-omni.
+Local voice cloning studio. Native GPU UI via [GPUIX](https://github.com/remorses/gpuix). Synthesis via VoxCPM2 (`voxcpm2-cli` from llama.cpp-omni).
 
 ## Run
 
@@ -9,6 +9,12 @@ bun install
 bun run dev
 ```
 
-Record a voice from Harvard sentences, then type text and generate speech in that voice.
+Hot reload remounts React in the same window. Close the red traffic light to quit.
 
-Voices and generations live in `~/.voice-clone`. Model paths default to files under `/Users/yanicells/Documents/dev/local-models`.
+## Use
+
+1. **Voices → Record** — name the voice, pick Quick (3 Harvard sentences) or Full (10), then read each line.
+2. **Speak** — select a voice, type, Enter. Clone uses your reference. Design describes a voice in parentheses with no clip.
+3. Import a WAV if you already have a clean recording.
+
+Voices and generations are stored in `~/.voice-clone`. Model paths default to files under `/Users/yanicells/Documents/dev/local-models`.

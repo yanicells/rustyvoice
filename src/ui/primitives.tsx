@@ -108,7 +108,7 @@ export function Field({
   hint?: string
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexGrow: 1, minWidth: 160 }}>
       <text style={{ fontSize: 11.5, fontWeight: 500, color: C.ghost }}>{label}</text>
       <input
         value={value}
