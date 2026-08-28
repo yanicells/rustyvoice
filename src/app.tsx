@@ -15,6 +15,7 @@ import {
 import { modelStatus, synthesize } from './lib/tts'
 import type { GenerationMode, Page, StudioData, Voice } from './types'
 import { C } from './theme'
+import { Banner } from './ui/primitives'
 import { CreateVoicePage } from './ui/create-voice'
 import { SettingsPage } from './ui/settings'
 import { Sidebar } from './ui/sidebar'
@@ -31,6 +32,12 @@ export function App() {
   useEffect(() => {
     saveStudio(data)
   }, [data])
+
+  useEffect(() => {
+    if (!flash) return
+    const id = setTimeout(() => setFlash(null), 8000)
+    return () => clearTimeout(id)
+  }, [flash])
 
   const patch = (fn: (current: StudioData) => StudioData) => {
     setData((current) => fn(current))
@@ -143,7 +150,8 @@ export function App() {
                 ),
               }))
             }
-            onSelect={(id) => {
+            onSelect={(id) => patch((current) => ({ ...current, selectedVoiceId: id }))}
+            onUse={(id) => {
               patch((current) => ({ ...current, selectedVoiceId: id }))
               setPage('speak')
             }}
@@ -168,21 +176,7 @@ export function App() {
           />
         )}
       </div>
-      {flash && (
-        <div
-          style={{
-            flexShrink: 0,
-            paddingLeft: 16,
-            paddingRight: 16,
-            paddingTop: 8,
-            paddingBottom: 8,
-            backgroundColor: '#2A1C1C',
-          }}
-          onClick={() => setFlash(null)}
-        >
-          <text style={{ fontSize: 12.5, color: C.danger }}>{flash}</text>
-        </div>
-      )}
+      {flash && <Banner message={flash} onDismiss={() => setFlash(null)} />}
     </div>
   )
 }

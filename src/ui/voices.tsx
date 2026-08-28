@@ -7,7 +7,7 @@ import { newId } from '../lib/store'
 import { formatDuration } from '../lib/wav'
 import type { StudioData, Voice } from '../types'
 import { C, THEME } from '../theme'
-import { Button, EmptyState, Header, IconButton, Pane } from './primitives'
+import { Button, Column, EmptyState, Header, IconButton, Pane, Scroller } from './primitives'
 
 export function VoicesPage({
   data,
@@ -16,6 +16,7 @@ export function VoicesPage({
   onDelete,
   onRename,
   onSelect,
+  onUse,
   onError,
 }: {
   data: StudioData
@@ -24,6 +25,7 @@ export function VoicesPage({
   onDelete: (id: string) => void
   onRename: (id: string, name: string) => void
   onSelect: (id: string) => void
+  onUse: (id: string) => void
   onError: (message: string) => void
 }) {
   const importFile = async () => {
@@ -65,20 +67,21 @@ export function VoicesPage({
           action={<Button label="Record a voice" icon="mic" variant="primary" onClick={onCreate} />}
         />
       ) : (
-        <div style={{ flexGrow: 1, minHeight: 0, overflowY: 'scroll', paddingLeft: 20, paddingRight: 20, paddingBottom: 24 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 720 }}>
+        <Scroller>
+          <Column gap={8}>
             {data.voices.map((voice) => (
               <VoiceCard
                 key={voice.id}
                 voice={voice}
                 selected={voice.id === data.selectedVoiceId}
                 onSelect={() => onSelect(voice.id)}
+                onUse={() => onUse(voice.id)}
                 onDelete={() => onDelete(voice.id)}
                 onRename={(name) => onRename(voice.id, name)}
               />
             ))}
-          </div>
-        </div>
+          </Column>
+        </Scroller>
       )}
     </Pane>
   )
@@ -88,12 +91,14 @@ function VoiceCard({
   voice,
   selected,
   onSelect,
+  onUse,
   onDelete,
   onRename,
 }: {
   voice: Voice
   selected: boolean
   onSelect: () => void
+  onUse: () => void
   onDelete: () => void
   onRename: (name: string) => void
 }) {
@@ -106,10 +111,11 @@ function VoiceCard({
         gap: 12,
         padding: 12,
         borderRadius: 12,
-        backgroundColor: C.raised,
+        backgroundColor: selected ? '#2A2422' : C.raised,
         borderWidth: 1,
-        borderColor: selected ? C.borderStrong : C.border,
+        borderColor: selected ? C.accentDim : C.border,
         cursor: 'pointer',
+        hover: { borderColor: selected ? C.accent : C.borderStrong },
       }}
       onClick={onSelect}
     >
@@ -146,9 +152,10 @@ function VoiceCard({
           onChange={(event) => onRename((event.value ?? voice.name).trim() || voice.name)}
         />
         <text style={{ fontSize: 12, color: C.ghost }}>
-          {formatDuration(voice.durationSec)} · {voice.takes.length > 0 ? `${voice.takes.length} takes` : voice.source}
+          {`${formatDuration(voice.durationSec)}${voice.takes.length > 0 ? ` · ${voice.takes.length} takes` : ` · ${voice.source}`}${selected ? ' · in use' : ''}`}
         </text>
       </div>
+      <Button label="Speak" variant={selected ? 'primary' : 'ghost'} onClick={onUse} />
       <IconButton icon="play" onClick={() => void playWav(voice.referencePath)} />
       <IconButton icon="external" onClick={() => revealInFinder(voice.referencePath)} />
       <IconButton icon="trash" danger onClick={onDelete} />
