@@ -1,15 +1,15 @@
 import { useState } from 'react'
 
 import { playWav, revealInFinder, stopPlayback } from '../lib/audio'
-import { formatDuration } from '../lib/wav'
+import { formatAgo, formatDuration } from '../lib/wav'
 import type { Generation, GenerationMode, StudioData, Voice } from '../types'
 import { C, CONTENT_MAX_WIDTH, THEME } from '../theme'
-import { EmptyState, Header, Icon, IconButton, Pane } from './primitives'
+import { Column, EmptyState, Header, Icon, IconButton, Pane, Scroller } from './primitives'
 
 const SAMPLES = [
-  'Hello, this is a clone of my voice.',
-  'The birch canoe slid on the smooth planks.',
-  'Leave a message after the tone, I will call you back.',
+  { label: 'Hello, this is a clone', text: 'Hello, this is a clone of my voice.' },
+  { label: 'Birch canoe', text: 'The birch canoe slid on the smooth planks.' },
+  { label: 'Leave a message', text: 'Leave a message after the tone, I will call you back.' },
 ]
 
 export function SpeakPage({
@@ -40,40 +40,34 @@ export function SpeakPage({
 
   return (
     <Pane>
-      <Header title="Speak">
-        <ModeSwitch mode={mode} onChange={setMode} hasVoices={data.voices.length > 0} />
+      <Header
+        title="Speak"
+        subtitle={mode === 'clone' ? (voice ? voice.name : 'No voice yet') : 'Voice design'}
+      >
+        <ModeSwitch mode={mode} onChange={setMode} />
       </Header>
 
-      <div style={{ flexGrow: 1, minHeight: 0, overflowY: 'scroll', paddingLeft: 20, paddingRight: 20 }}>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-            width: '100%',
-            maxWidth: CONTENT_MAX_WIDTH,
-            paddingBottom: 20,
-          }}
-        >
-          {data.generations.length === 0 ? (
-            <EmptyState
-              icon="volume"
-              title={mode === 'clone' ? 'Type something. Hear it back.' : 'Describe a voice, then speak'}
-              body={
-                mode === 'clone'
-                  ? voice
-                    ? `Using ${voice.name}. Enter sends. Shift+enter for a new line.`
-                    : 'Create a voice first, or switch to design and describe one.'
-                  : 'Design mode prepends a voice description. No reference clip needed.'
-              }
-            />
-          ) : (
-            data.generations.map((item) => (
+      {data.generations.length === 0 ? (
+        <EmptyState
+          icon="volume"
+          title={mode === 'clone' ? 'Type something. Hear it back.' : 'Describe a voice, then speak'}
+          body={
+            mode === 'clone'
+              ? voice
+                ? `Using ${voice.name}. Enter sends. Shift+enter for a new line.`
+                : 'Create a voice first, or switch to Design and describe one.'
+              : 'Design prepends a short voice description. No reference clip needed.'
+          }
+        />
+      ) : (
+        <Scroller>
+          <Column gap={10}>
+            {data.generations.map((item) => (
               <GenerationRow key={item.id} item={item} onDelete={() => onDelete(item.id)} />
-            ))
-          )}
-        </div>
-      </div>
+            ))}
+          </Column>
+        </Scroller>
+      )}
 
       <Composer
         voice={voice}
@@ -95,15 +89,13 @@ export function SpeakPage({
 function ModeSwitch({
   mode,
   onChange,
-  hasVoices,
 }: {
   mode: GenerationMode
   onChange: (mode: GenerationMode) => void
-  hasVoices: boolean
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 4, backgroundColor: C.item, borderRadius: 8, padding: 3 }}>
-      <Seg label="Clone" active={mode === 'clone'} onClick={() => hasVoices && onChange('clone')} dimmed={!hasVoices} />
+      <Seg label="Clone" active={mode === 'clone'} onClick={() => onChange('clone')} />
       <Seg label="Design" active={mode === 'design'} onClick={() => onChange('design')} />
     </div>
   )
@@ -113,12 +105,10 @@ function Seg({
   label,
   active,
   onClick,
-  dimmed,
 }: {
   label: string
   active: boolean
   onClick: () => void
-  dimmed?: boolean
 }) {
   return (
     <div
@@ -129,9 +119,8 @@ function Seg({
         borderRadius: 6,
         display: 'flex',
         alignItems: 'center',
-        cursor: dimmed ? 'default' : 'pointer',
+        cursor: 'pointer',
         backgroundColor: active ? C.raised : '#00000000',
-        opacity: dimmed ? 0.4 : 1,
       }}
       onClick={onClick}
     >
@@ -141,6 +130,7 @@ function Seg({
 }
 
 function GenerationRow({ item, onDelete }: { item: Generation; onDelete: () => void }) {
+  const ago = formatAgo(item.createdAt)
   return (
     <div
       style={{
@@ -155,16 +145,29 @@ function GenerationRow({ item, onDelete }: { item: Generation; onDelete: () => v
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <text style={{ fontSize: 12, color: C.accent }}>{item.voiceName}</text>
-        <text style={{ fontSize: 12, color: C.ghost }}>
-          {formatDuration(item.durationSec)} · {(item.elapsedMs / 1000).toFixed(1)}s
+        <text
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: C.accent,
+            flexShrink: 1,
+            minWidth: 0,
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+          }}
+        >
+          {item.voiceName}
+        </text>
+        <text style={{ fontSize: 12, color: C.ghost, flexShrink: 0 }}>
+          {`${formatDuration(item.durationSec)} audio · ${(item.elapsedMs / 1000).toFixed(1)}s gen${ago ? ` · ${ago}` : ''}`}
         </text>
         <div style={{ flexGrow: 1 }} />
         <IconButton icon="play" onClick={() => void playWav(item.path)} />
         <IconButton icon="external" onClick={() => revealInFinder(item.path)} />
         <IconButton icon="trash" danger onClick={onDelete} />
       </div>
-      <text style={{ fontSize: 14, lineHeight: 20, color: C.text }}>{item.text}</text>
+      <text style={{ fontSize: 14, lineHeight: 20, color: C.text, whiteSpace: 'normal' }}>{item.text}</text>
     </div>
   )
 }
@@ -194,6 +197,13 @@ function Composer({
   onSend: (text: string) => void
   onSample: (text: string) => void
 }) {
+  const status = busy
+    ? busy
+    : mode === 'clone'
+      ? voice
+        ? voice.name
+        : 'No voice selected'
+      : 'Voice design'
   return (
     <div
       style={{
@@ -201,8 +211,8 @@ function Composer({
         flexDirection: 'column',
         alignItems: 'center',
         flexShrink: 0,
-        paddingLeft: 20,
-        paddingRight: 20,
+        paddingLeft: 24,
+        paddingRight: 24,
         paddingBottom: 16,
         overflow: 'visible',
         userSelect: 'none',
@@ -217,29 +227,41 @@ function Composer({
           backgroundColor: C.composer,
           borderRadius: 13,
           borderWidth: 1,
-          borderColor: C.border,
+          borderColor: busy ? C.accentDim : C.border,
           paddingTop: 10,
           paddingBottom: 10,
           overflow: 'visible',
         }}
       >
         {mode === 'design' && (
-          <input
-            value={design}
-            placeholder="A calm male voice, slightly low, unhurried"
-            theme={THEME}
-            style={{
-              width: '100%',
-              height: 30,
-              paddingLeft: 10,
-              paddingRight: 10,
-              fontSize: 12.5,
-              color: C.secondary,
-              backgroundColor: '#00000000',
-              borderWidth: 0,
-            }}
-            onChange={(event) => onDesign(event.value ?? '')}
-          />
+          <>
+            <input
+              value={design}
+              placeholder="A calm male voice, slightly low, unhurried"
+              theme={THEME}
+              style={{
+                width: '100%',
+                height: 30,
+                paddingLeft: 10,
+                paddingRight: 10,
+                fontSize: 12.5,
+                color: C.secondary,
+                backgroundColor: '#00000000',
+                borderWidth: 0,
+              }}
+              onChange={(event) => onDesign(event.value ?? '')}
+            />
+            <div
+              style={{
+                height: 1,
+                backgroundColor: C.border,
+                marginLeft: 10,
+                marginRight: 10,
+                marginTop: 2,
+                marginBottom: 6,
+              }}
+            />
+          </>
         )}
         <textarea
           testId="composer"
@@ -274,12 +296,25 @@ function Composer({
             paddingRight: 10,
           }}
         >
-          <Icon name={mode === 'design' ? 'sparkle' : 'audio'} size={12} color={C.tertiary} />
-          <text style={{ fontSize: 12.5, color: C.secondary }}>
-            {busy ?? (mode === 'clone' ? (voice ? voice.name : 'No voice') : 'Voice design')}
+          <Icon name={mode === 'design' ? 'sparkle' : 'audio'} size={12} color={busy ? C.accent : C.tertiary} />
+          <text
+            style={{
+              fontSize: 12.5,
+              color: busy ? C.accent : C.secondary,
+              flexShrink: 1,
+              minWidth: 0,
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+            }}
+          >
+            {status}
           </text>
-          {logLine && !busy && <text style={{ fontSize: 11.5, color: C.ghost }}>{logLine}</text>}
+          {logLine && !busy && (
+            <text style={{ fontSize: 11.5, color: C.ghost, flexShrink: 0 }}>{logLine}</text>
+          )}
           <div style={{ flexGrow: 1 }} />
+          <IconButton icon="square" onClick={stopPlayback} />
           <div
             testId="speak"
             style={{
@@ -295,7 +330,7 @@ function Composer({
             }}
             onClick={() => ready && onSend(draft)}
           >
-            <Icon name="play" size={12} color={ready ? C.onInverse : C.ghost} />
+            <Icon name="send" size={12} color={ready ? C.onInverse : C.ghost} />
           </div>
         </div>
       </div>
@@ -303,26 +338,23 @@ function Composer({
         style={{
           display: 'flex',
           flexDirection: 'row',
+          flexWrap: 'wrap',
           gap: 6,
           width: '100%',
           maxWidth: CONTENT_MAX_WIDTH,
           paddingTop: 8,
-          paddingLeft: 4,
+          alignItems: 'center',
         }}
       >
         {SAMPLES.map((sample) => (
-          <SampleChip key={sample} sample={sample} onClick={() => onSample(sample)} />
+          <SampleChip key={sample.text} sample={sample.label} onClick={() => onSample(sample.text)} />
         ))}
-        <div style={{ marginLeft: 4, cursor: 'pointer' }} onClick={stopPlayback}>
-          <text style={{ fontSize: 11.5, color: C.ghost }}>stop audio</text>
-        </div>
       </div>
     </div>
   )
 }
 
 function SampleChip({ sample, onClick }: { sample: string; onClick: () => void }) {
-  const label = sample.length > 34 ? `${sample.slice(0, 32)}…` : sample
   return (
     <div
       style={{
@@ -333,13 +365,13 @@ function SampleChip({ sample, onClick }: { sample: string; onClick: () => void }
         backgroundColor: C.item,
         display: 'flex',
         alignItems: 'center',
+        flexShrink: 0,
         cursor: 'pointer',
         hover: { backgroundColor: C.overlayStrong },
       }}
       onClick={onClick}
     >
-      <text style={{ fontSize: 11.5, color: C.tertiary }}>{label}</text>
+      <text style={{ fontSize: 11.5, color: C.tertiary }}>{sample}</text>
     </div>
   )
 }
-
