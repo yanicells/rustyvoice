@@ -40,3 +40,16 @@ export function formatClock(seconds: number): string {
   const s = whole % 60
   return `${m}:${s.toString().padStart(2, '0')}`
 }
+
+export function formatAgo(iso: string, now = Date.now()): string {
+  const then = new Date(iso).getTime()
+  if (!Number.isFinite(then)) return ''
+  const sec = Math.max(0, Math.round((now - then) / 1000))
+  if (sec < 45) return 'just now'
+  const min = Math.round(sec / 60)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.round(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  const day = Math.round(hr / 24)
+  return `${day}d ago`
+}
