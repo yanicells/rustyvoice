@@ -16,8 +16,8 @@ import { voiceDir } from '../lib/paths'
 import { newId } from '../lib/store'
 import { formatClock } from '../lib/wav'
 import type { Settings, Take, Voice } from '../types'
-import { C, CONTENT_MAX_WIDTH } from '../theme'
-import { Button, Field, Header, Meter, Pane } from './primitives'
+import { C } from '../theme'
+import { Button, Column, Field, Header, Meter, Pane, Scroller } from './primitives'
 
 export function CreateVoicePage({
   settings,
@@ -45,6 +45,7 @@ export function CreateVoicePage({
   const started = voiceId != null
   const recordedCount = Object.keys(takes).length
   const take = phrase ? takes[phrase.id] : undefined
+  const last = index >= phrases.length - 1
 
   useEffect(() => {
     if (!recording) return
@@ -142,31 +143,16 @@ export function CreateVoicePage({
       <Header title="New voice">
         <Button label="Cancel" onClick={onCancel} />
       </Header>
-      <div
-        style={{
-          flexGrow: 1,
-          minHeight: 0,
-          overflowY: 'scroll',
-          paddingLeft: 20,
-          paddingRight: 20,
-          paddingBottom: 28,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 18,
-            width: '100%',
-            maxWidth: CONTENT_MAX_WIDTH,
-          }}
-        >
+      <Scroller>
+        <Column gap={18}>
           {!started ? (
             <>
-              <text style={{ fontSize: 22, fontWeight: 500, color: C.text }}>Record a reference</text>
-              <text style={{ fontSize: 13.5, lineHeight: 20, color: C.secondary }}>
-                Read Harvard sentences in a quiet room, one line at a time. Quick is three lines. Full is the first IEEE list of ten.
-              </text>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <text style={{ fontSize: 22, fontWeight: 500, color: C.text }}>Record a reference</text>
+                <text style={{ fontSize: 13.5, lineHeight: 20, color: C.secondary, whiteSpace: 'normal' }}>
+                  Read Harvard sentences in a quiet room, one line at a time. Quick is three lines. Full is the first IEEE list of ten.
+                </text>
+              </div>
               <Field label="Name" value={name} placeholder="Voice name" onChange={setName} />
               <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
                 <ScriptCard
@@ -187,19 +173,26 @@ export function CreateVoicePage({
           ) : phrase ? (
             <>
               <text style={{ fontSize: 12, color: C.ghost }}>
-                {index + 1} of {phrases.length} · {recordedCount} saved
+                {`Line ${index + 1} of ${phrases.length} · ${recordedCount} saved`}
               </text>
-              <Dots total={phrases.length} index={index} takes={takes} phrases={phrases} />
+              <Dots
+                index={index}
+                takes={takes}
+                phrases={phrases}
+                onJump={(next) => !recording && setIndex(next)}
+              />
               <div
                 style={{
                   padding: 20,
                   borderRadius: 14,
                   backgroundColor: C.raised,
                   borderWidth: 1,
-                  borderColor: C.border,
+                  borderColor: recording ? C.accent : C.border,
                 }}
               >
-                <text style={{ fontSize: 22, lineHeight: 32, color: C.text }}>{phrase.text}</text>
+                <text style={{ fontSize: 22, lineHeight: 32, color: C.text, whiteSpace: 'normal' }}>
+                  {phrase.text}
+                </text>
               </div>
               {recording ? (
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -218,7 +211,7 @@ export function CreateVoicePage({
                   <Button
                     label={take ? 'Re-record' : 'Record'}
                     icon="mic"
-                    variant="primary"
+                    variant={take ? 'ghost' : 'primary'}
                     onClick={() => void record()}
                   />
                 )}
@@ -229,38 +222,30 @@ export function CreateVoicePage({
                   onClick={() => take && void playWav(take.path)}
                 />
                 <Button
-                  label="Skip"
-                  icon="skip"
-                  disabled={recording || index >= phrases.length - 1}
-                  onClick={() => setIndex((value) => Math.min(phrases.length - 1, value + 1))}
-                />
-                <Button
                   label="Back"
                   disabled={recording || index === 0}
                   onClick={() => setIndex((value) => Math.max(0, value - 1))}
                 />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
-                {index < phrases.length - 1 ? (
-                  <Button
-                    label="Next line"
-                    variant="ghost"
-                    disabled={recording}
-                    onClick={() => setIndex((value) => Math.min(phrases.length - 1, value + 1))}
-                  />
-                ) : (
+                {last ? (
                   <Button
                     label={saving ? 'Saving…' : 'Save voice'}
                     variant="primary"
                     disabled={recording || recordedCount === 0 || saving}
                     onClick={() => void save()}
                   />
+                ) : (
+                  <Button
+                    label="Next line"
+                    variant={take && !recording ? 'primary' : 'ghost'}
+                    disabled={recording}
+                    onClick={() => setIndex((value) => Math.min(phrases.length - 1, value + 1))}
+                  />
                 )}
               </div>
             </>
           ) : null}
-        </div>
-      </div>
+        </Column>
+      </Scroller>
     </Pane>
   )
 }
@@ -279,54 +264,70 @@ function ScriptCard({
   return (
     <div
       style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
         flexGrow: 1,
-        padding: 12,
+        minWidth: 0,
+        padding: 14,
         borderRadius: 10,
-        backgroundColor: C.raised,
+        backgroundColor: active ? C.accentDim : C.raised,
         borderWidth: 1,
         borderColor: active ? C.accent : C.border,
         cursor: 'pointer',
+        hover: { borderColor: active ? C.accent : C.borderStrong },
       }}
       onClick={onClick}
     >
-      <text style={{ fontSize: 14, color: C.text }}>{title}</text>
-      <text style={{ fontSize: 12, color: C.tertiary, paddingTop: 4 }}>{body}</text>
+      <text style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{title}</text>
+      <text style={{ fontSize: 12, lineHeight: 16, color: C.tertiary, whiteSpace: 'normal' }}>{body}</text>
     </div>
   )
 }
 
-function Dot({ filled, current }: { filled: boolean; current: boolean }) {
+function Dot({
+  filled,
+  current,
+  onClick,
+}: {
+  filled: boolean
+  current: boolean
+  onClick: () => void
+}) {
   return (
     <div
       style={{
-        width: current ? 16 : 7,
-        height: 7,
+        width: current ? 16 : 8,
+        height: 8,
         borderRadius: 4,
         backgroundColor: filled ? C.accent : current ? C.text : C.ghost,
         flexShrink: 0,
+        cursor: 'pointer',
       }}
+      onClick={onClick}
     />
   )
 }
 
 function Dots({
-  total,
   index,
   takes,
   phrases,
+  onJump,
 }: {
-  total: number
   index: number
   takes: Record<string, Take>
   phrases: { id: string }[]
+  onJump: (index: number) => void
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
-      {Array.from({ length: total }, (_, i) => (
+    <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+      {phrases.map((item, i) => (
         <Dot
-          key={i}
-          filled={Boolean(takes[phrases[i]?.id ?? ''])}
+          key={item.id}
+          filled={Boolean(takes[item.id])}
           current={i === index}
+          onClick={() => onJump(i)}
         />
       ))}
     </div>
