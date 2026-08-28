@@ -59,8 +59,10 @@ export function Sidebar({
       </text>
       <div style={{ flexGrow: 1, minHeight: 0, overflowY: 'scroll', paddingLeft: 8, paddingRight: 8, paddingBottom: 8 }}>
         {data.voices.length === 0 ? (
-          <div style={{ paddingLeft: 8, paddingTop: 6 }}>
-            <text style={{ fontSize: 12.5, color: C.ghost }}>None yet. Record a reference.</text>
+          <div style={{ paddingLeft: 8, paddingTop: 6, paddingRight: 8 }}>
+            <text style={{ fontSize: 12.5, lineHeight: 18, color: C.ghost, whiteSpace: 'normal' }}>
+              None yet. Record a reference.
+            </text>
           </div>
         ) : (
           data.voices.map((voice) => (
@@ -97,7 +99,19 @@ export function Sidebar({
             flexShrink: 0,
           }}
         />
-        <text style={{ fontSize: 11.5, color: C.tertiary }}>{status.ok ? 'VoxCPM2' : 'Setup'}</text>
+        <text
+          style={{
+            fontSize: 11.5,
+            color: status.ok ? C.tertiary : C.danger,
+            flexGrow: 1,
+            minWidth: 0,
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+          }}
+        >
+          {status.ok ? 'VoxCPM2 ready' : 'Model missing'}
+        </text>
       </div>
     </div>
   )
@@ -153,8 +167,9 @@ function VoiceRow({
     <div
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
         paddingLeft: 8,
         paddingRight: 8,
         paddingTop: 7,
@@ -166,10 +181,31 @@ function VoiceRow({
       }}
       onClick={onSelect}
     >
-      <text style={{ fontSize: 13, color: C.text }}>{voice.name}</text>
-      <text style={{ fontSize: 11.5, color: C.ghost }}>
-        {formatDuration(voice.durationSec)} · {voice.source === 'import' ? 'imported' : 'recorded'}
-      </text>
+      <div
+        style={{
+          width: 3,
+          height: 28,
+          borderRadius: 2,
+          backgroundColor: active ? C.accent : '#00000000',
+          flexShrink: 0,
+        }}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1, minWidth: 0 }}>
+        <text
+          style={{
+            fontSize: 13,
+            color: C.text,
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+          }}
+        >
+          {voice.name}
+        </text>
+        <text style={{ fontSize: 11.5, color: C.ghost }}>
+          {`${formatDuration(voice.durationSec)} · ${voice.source === 'import' ? 'imported' : 'recorded'}`}
+        </text>
+      </div>
     </div>
   )
 }

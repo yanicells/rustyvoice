@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test'
 
 import { parseAvfoundationDevices, pickDefaultMic } from './audio'
-import { formatDuration, pcmWavDurationSec } from './wav'
+import { formatAgo, formatDuration, pcmWavDurationSec } from './wav'
 
 const FFMPEG_LIST = `
 [AVFoundation indev @ 0xb4b010140] AVFoundation video devices:
@@ -48,4 +48,12 @@ test('pcm wav duration reads the data chunk', () => {
 test('formatDuration is m:ss', () => {
   expect(formatDuration(0)).toBe('0:00')
   expect(formatDuration(65)).toBe('1:05')
+})
+
+test('formatAgo uses short relative labels', () => {
+  const now = Date.parse('2026-08-28T12:00:00.000Z')
+  expect(formatAgo('2026-08-28T11:59:40.000Z', now)).toBe('just now')
+  expect(formatAgo('2026-08-28T11:50:00.000Z', now)).toBe('10m ago')
+  expect(formatAgo('2026-08-28T09:00:00.000Z', now)).toBe('3h ago')
+  expect(formatAgo('2026-08-26T12:00:00.000Z', now)).toBe('2d ago')
 })
