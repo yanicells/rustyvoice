@@ -13,6 +13,7 @@ import mic from '../assets/icons/mic.svg' with { type: 'file' }
 import play from '../assets/icons/play.svg' with { type: 'file' }
 import plus from '../assets/icons/plus.svg' with { type: 'file' }
 import rotate from '../assets/icons/rotate.svg' with { type: 'file' }
+import send from '../assets/icons/send.svg' with { type: 'file' }
 import settings from '../assets/icons/settings.svg' with { type: 'file' }
 import skip from '../assets/icons/skip.svg' with { type: 'file' }
 import sparkle from '../assets/icons/sparkle.svg' with { type: 'file' }
@@ -21,6 +22,7 @@ import trash from '../assets/icons/trash.svg' with { type: 'file' }
 import upload from '../assets/icons/upload.svg' with { type: 'file' }
 import users from '../assets/icons/users.svg' with { type: 'file' }
 import volume from '../assets/icons/volume.svg' with { type: 'file' }
+import x from '../assets/icons/x.svg' with { type: 'file' }
 
 const RAW = {
   audio,
@@ -34,6 +36,7 @@ const RAW = {
   play,
   plus,
   rotate,
+  send,
   settings,
   skip,
   sparkle,
@@ -42,6 +45,7 @@ const RAW = {
   upload,
   users,
   volume,
+  x,
 } as const
 
 export type IconName = keyof typeof RAW
