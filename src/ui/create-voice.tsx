@@ -2,16 +2,8 @@ import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { useEffect, useState } from 'react'
 
-import { phrasesFor, joinPromptText, type ScriptId } from '../harvard'
-import {
-  concatWavs,
-  playWav,
-  resolveMicIndex,
-  startRecording,
-  stopPlayback,
-  stopRecording,
-  wavDurationSec,
-} from '../lib/audio'
+import { joinParagraphs, paragraphsFor, type ScriptId } from '../harvard'
+import { concatWavs, playWav, resolveMicIndex, startRecording, stopPlayback, stopRecording, wavDurationSec } from '../lib/audio'
 import { voiceDir } from '../lib/paths'
 import { newId } from '../lib/store'
 import { formatClock } from '../lib/wav'
@@ -33,19 +25,15 @@ export function CreateVoicePage({
   const [name, setName] = useState('')
   const [script, setScript] = useState<ScriptId>('quick')
   const [voiceId, setVoiceId] = useState<string | null>(null)
-  const [index, setIndex] = useState(0)
-  const [takes, setTakes] = useState<Record<string, Take>>({})
+  const [take, setTake] = useState<Take | null>(null)
   const [recording, setRecording] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [tick, setTick] = useState(0)
   const [saving, setSaving] = useState(false)
 
-  const phrases = phrasesFor(script)
-  const phrase = phrases[index]
+  const paragraphs = paragraphsFor(script)
+  const promptText = joinParagraphs(paragraphs)
   const started = voiceId != null
-  const recordedCount = Object.keys(takes).length
-  const take = phrase ? takes[phrase.id] : undefined
-  const last = index >= phrases.length - 1
 
   useEffect(() => {
     if (!recording) return
@@ -66,15 +54,14 @@ export function CreateVoicePage({
     const id = newId('voice')
     mkdirSync(join(voiceDir(id), 'takes'), { recursive: true })
     setVoiceId(id)
-    setIndex(0)
   }
 
   const record = async () => {
-    if (!voiceId || !phrase || recording) return
+    if (!voiceId || recording) return
     try {
       stopPlayback()
       const mic = await resolveMicIndex(settings.ffmpegPath, settings.micDevice)
-      const outPath = join(voiceDir(voiceId), 'takes', `${phrase.id}.wav`)
+      const outPath = join(voiceDir(voiceId), 'takes', 'script.wav')
       await startRecording({ ffmpegPath: settings.ffmpegPath, deviceIndex: mic.index, outPath })
       setElapsed(0)
       setRecording(true)
@@ -84,20 +71,17 @@ export function CreateVoicePage({
   }
 
   const stop = async () => {
-    if (!voiceId || !phrase) return
+    if (!voiceId) return
     try {
       await stopRecording()
       setRecording(false)
-      const path = join(voiceDir(voiceId), 'takes', `${phrase.id}.wav`)
+      const path = join(voiceDir(voiceId), 'takes', 'script.wav')
       const durationSec = wavDurationSec(path)
-      if (durationSec < 0.6) {
-        onError('That take was too short. Hold record while you read the line.')
+      if (durationSec < 2) {
+        onError('That take was too short. Hold record while you read the whole script.')
         return
       }
-      setTakes((current) => ({
-        ...current,
-        [phrase.id]: { phraseId: phrase.id, path, durationSec },
-      }))
+      setTake({ phraseId: 'script', path, durationSec })
     } catch (error) {
       setRecording(false)
       onError(error instanceof Error ? error.message : String(error))
@@ -105,21 +89,11 @@ export function CreateVoicePage({
   }
 
   const save = async () => {
-    if (!voiceId || saving) return
-    const ordered = phrases.map((item) => takes[item.id]).filter(Boolean)
-    if (ordered.length === 0) {
-      onError('Record at least one line')
-      return
-    }
+    if (!voiceId || !take || saving) return
     setSaving(true)
     try {
       const referencePath = join(voiceDir(voiceId), 'reference.wav')
-      await concatWavs(
-        settings.ffmpegPath,
-        ordered.map((item) => item.path),
-        referencePath,
-      )
-      const used = phrases.filter((item) => takes[item.id])
+      await concatWavs(settings.ffmpegPath, [take.path], referencePath)
       const now = new Date().toISOString()
       onSaved({
         id: voiceId,
@@ -127,8 +101,8 @@ export function CreateVoicePage({
         createdAt: now,
         updatedAt: now,
         referencePath,
-        promptText: joinPromptText(used),
-        takes: ordered,
+        promptText,
+        takes: [{ ...take, path: referencePath, durationSec: wavDurationSec(referencePath) }],
         source: 'record',
         durationSec: wavDurationSec(referencePath),
       })
@@ -150,39 +124,36 @@ export function CreateVoicePage({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <text style={{ fontSize: 22, fontWeight: 500, color: C.text }}>Record a reference</text>
                 <text style={{ fontSize: 13.5, lineHeight: 20, color: C.secondary, whiteSpace: 'normal' }}>
-                  Read Harvard sentences in a quiet room, one line at a time. Quick is three lines. Full records more for coverage; VoxCPM2 still clones from about 25 seconds.
+                  Read the Harvard script in a quiet room, in one take. Quick is a short paragraph. Full is a few paragraphs; VoxCPM2 still clones from about 25 seconds.
                 </text>
               </div>
               <Field label="Name" value={name} placeholder="Voice name" onChange={setName} />
               <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
                 <ScriptCard
                   title="Quick"
-                  body="3 sentences · about 20 seconds"
+                  body="One short paragraph · about 20 seconds"
                   active={script === 'quick'}
                   onClick={() => setScript('quick')}
                 />
                 <ScriptCard
                   title="Full"
-                  body="40 sentences · model uses ~25s"
+                  body="A few paragraphs · one take"
                   active={script === 'full'}
                   onClick={() => setScript('full')}
                 />
               </div>
               <Button label="Start recording" icon="mic" variant="primary" testId="start-record" onClick={begin} />
             </>
-          ) : phrase ? (
+          ) : (
             <>
               <text style={{ fontSize: 12, color: C.ghost }}>
-                {`Line ${index + 1} of ${phrases.length} · ${recordedCount} saved`}
+                {take ? `Saved ${formatClock(take.durationSec)}` : 'One take · read it like a page, not a list'}
               </text>
-              <Dots
-                index={index}
-                takes={takes}
-                phrases={phrases}
-                onJump={(next) => !recording && setIndex(next)}
-              />
               <div
                 style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
                   padding: 20,
                   borderRadius: 14,
                   backgroundColor: C.raised,
@@ -190,19 +161,24 @@ export function CreateVoicePage({
                   borderColor: recording ? C.accent : C.border,
                 }}
               >
-                <text style={{ fontSize: 22, lineHeight: 32, color: C.text, whiteSpace: 'normal' }}>
-                  {phrase.text}
-                </text>
+                {paragraphs.map((paragraph) => (
+                  <text
+                    key={paragraph.slice(0, 24)}
+                    style={{ fontSize: 16, lineHeight: 24, color: C.text, whiteSpace: 'normal' }}
+                  >
+                    {paragraph}
+                  </text>
+                ))}
               </div>
               {recording ? (
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14 }}>
                   <Meter t={tick} />
                   <text style={{ fontSize: 18, color: C.accent }}>{formatClock(elapsed)}</text>
                 </div>
-              ) : take ? (
-                <text style={{ fontSize: 13, color: C.ok }}>Saved {formatClock(take.durationSec)}</text>
               ) : (
-                <text style={{ fontSize: 13, color: C.tertiary }}>Read it naturally. Stop when the line is done.</text>
+                <text style={{ fontSize: 13, color: take ? C.ok : C.tertiary, whiteSpace: 'normal' }}>
+                  {take ? 'Keep this take, or record again.' : 'Read it naturally. Stop when the last paragraph is done.'}
+                </text>
               )}
               <div style={{ display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                 {recording ? (
@@ -222,28 +198,14 @@ export function CreateVoicePage({
                   onClick={() => take && void playWav(take.path)}
                 />
                 <Button
-                  label="Back"
-                  disabled={recording || index === 0}
-                  onClick={() => setIndex((value) => Math.max(0, value - 1))}
+                  label={saving ? 'Saving…' : 'Save voice'}
+                  variant="primary"
+                  disabled={recording || !take || saving}
+                  onClick={() => void save()}
                 />
-                {last ? (
-                  <Button
-                    label={saving ? 'Saving…' : 'Save voice'}
-                    variant="primary"
-                    disabled={recording || recordedCount === 0 || saving}
-                    onClick={() => void save()}
-                  />
-                ) : (
-                  <Button
-                    label="Next line"
-                    variant={take && !recording ? 'primary' : 'ghost'}
-                    disabled={recording}
-                    onClick={() => setIndex((value) => Math.min(phrases.length - 1, value + 1))}
-                  />
-                )}
               </div>
             </>
-          ) : null}
+          )}
         </Column>
       </Scroller>
     </Pane>
@@ -281,55 +243,6 @@ function ScriptCard({
     >
       <text style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{title}</text>
       <text style={{ fontSize: 12, lineHeight: 16, color: C.tertiary, whiteSpace: 'normal' }}>{body}</text>
-    </div>
-  )
-}
-
-function Dot({
-  filled,
-  current,
-  onClick,
-}: {
-  filled: boolean
-  current: boolean
-  onClick: () => void
-}) {
-  return (
-    <div
-      style={{
-        width: current ? 16 : 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: filled ? C.accent : current ? C.text : C.ghost,
-        flexShrink: 0,
-        cursor: 'pointer',
-      }}
-      onClick={onClick}
-    />
-  )
-}
-
-function Dots({
-  index,
-  takes,
-  phrases,
-  onJump,
-}: {
-  index: number
-  takes: Record<string, Take>
-  phrases: { id: string }[]
-  onJump: (index: number) => void
-}) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-      {phrases.map((item, i) => (
-        <Dot
-          key={item.id}
-          filled={Boolean(takes[item.id])}
-          current={i === index}
-          onClick={() => onJump(i)}
-        />
-      ))}
     </div>
   )
 }
