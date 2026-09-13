@@ -129,4 +129,5 @@ test('record setup stacks script cards as Quick and Full', () => {
   expect(text).toContain('Quick')
   expect(text).toContain('Full')
   expect(text).toContain('Start recording')
+  expect(text).toContain('one take')
 })

@@ -59,3 +59,27 @@ export function phrasesFor(script: ScriptId): Phrase[] {
 export function joinPromptText(phrases: Phrase[]): string {
   return phrases.map((phrase) => phrase.text.trim()).filter(Boolean).join(' ')
 }
+
+/** Same Harvard lines, written as prose so a single take can flow. */
+export const HARVARD_QUICK_PARAS: string[] = [
+  "The birch canoe slid on the smooth planks, so glue the sheet to the dark blue background. It's easy to tell the depth of a well.",
+]
+
+export const HARVARD_FULL_PARAS: string[] = [
+  "The birch canoe slid on the smooth planks, so glue the sheet to the dark blue background. It's easy to tell the depth of a well. These days a chicken leg is a rare dish, and rice is often served in round bowls. The juice of lemons makes fine punch. The box was thrown beside the parked truck, and the hogs were fed chopped corn and garbage. Four hours of steady work faced us, and a large size in stockings is hard to sell.",
+  "The boy was there when the sun rose. A rod is used to catch pink salmon, and the source of the huge river is the clear spring. Kick the ball straight and follow through. Help the woman get back to her feet. A pot of tea helps to pass the evening. Smoky fires lack flame and heat. The soft cushion broke the man's fall. The salt breeze came across from the sea, and the girl at the booth sold fifty bonds.",
+  'The small pup gnawed a hole in the sock, and the fish twisted and turned on the bent hook. Press the pants and sew a button on the vest. The swan dive was far short of perfect. The beauty of the view stunned the young boy. Two blue fish swam in the tank. Her purse was full of useless trash. The colt reared and threw the tall rider. It snowed, rained, and hailed the same morning. Read verse out loud for pleasure.',
+  'Hoist the load to your left shoulder, then take the winding path to reach the lake. Note closely the size of the gas tank. Wipe the grease off his dirty face, and mend the coat before you go out. The wrist was badly strained and hung limp. The stray cat gave birth to kittens. The young girl gave no clear response. The meal was cooked before the bell rang. What joy there is in living.',
+]
+
+export function paragraphsFor(script: ScriptId): string[] {
+  return script === 'quick' ? HARVARD_QUICK_PARAS : HARVARD_FULL_PARAS
+}
+
+export function joinParagraphs(paragraphs: string[]): string {
+  return paragraphs.map((paragraph) => paragraph.trim()).filter(Boolean).join('\n\n')
+}
+
+export function firstPromptSlice(promptText: string): string {
+  return promptText.split(/\n\n+/).map((part) => part.trim()).filter(Boolean)[0] ?? ''
+}

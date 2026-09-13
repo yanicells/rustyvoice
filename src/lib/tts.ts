@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { firstPromptSlice } from '../harvard'
 import type { Settings, Voice } from '../types'
 import { concatWavs, trimWav, wavDurationSec } from './audio'
 import { voiceDir } from './paths'
@@ -88,7 +89,10 @@ export async function prepareClonePrompt(
   voice: Voice,
 ): Promise<{ referencePath: string; promptText?: string }> {
   const outPath = join(voiceDir(voice.id), 'prompt.wav')
-  if (voice.takes.length > 0) {
+  const slice = firstPromptSlice(voice.promptText) || undefined
+  const longSingleTake = voice.takes.length <= 1
+
+  if (voice.takes.length > 1) {
     const selected = selectPromptTakes(voice.takes)
     const text = promptTextForTakes(selected)
     const total = selected.reduce((sum, take) => sum + take.durationSec, 0)
@@ -100,12 +104,14 @@ export async function prepareClonePrompt(
       selected.map((take) => take.path),
       outPath,
     )
-    return { referencePath: outPath, promptText: text || undefined }
+    return { referencePath: outPath, promptText: text || slice }
   }
-  const duration = voice.durationSec || wavDurationSec(voice.referencePath)
+
+  const src = voice.takes[0]?.path ?? voice.referencePath
+  const duration = voice.takes[0]?.durationSec || voice.durationSec || wavDurationSec(src)
   if (duration > PROMPT_MAX_SEC) {
-    await trimWav(settings.ffmpegPath, voice.referencePath, outPath, PROMPT_MAX_SEC)
-    return { referencePath: outPath }
+    await trimWav(settings.ffmpegPath, src, outPath, PROMPT_MAX_SEC)
+    return { referencePath: outPath, promptText: longSingleTake ? slice : undefined }
   }
-  return { referencePath: voice.referencePath, promptText: voice.promptText.trim() || undefined }
+  return { referencePath: src, promptText: voice.promptText.trim() || slice }
 }
