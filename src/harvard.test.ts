@@ -5,7 +5,9 @@ import { HARVARD_FULL, HARVARD_QUICK, joinPromptText, phrasesFor } from './harva
 test('quick script is the first three Harvard sentences', () => {
   expect(phrasesFor('quick')).toEqual(HARVARD_QUICK)
   expect(HARVARD_QUICK).toHaveLength(3)
-  expect(HARVARD_FULL).toHaveLength(10)
+  expect(HARVARD_FULL).toHaveLength(40)
+  expect(new Set(HARVARD_FULL.map((phrase) => phrase.id)).size).toBe(40)
+  expect(new Set(HARVARD_FULL.map((phrase) => phrase.text)).size).toBe(40)
 })
 
 test('joinPromptText concatenates recorded lines', () => {

@@ -3,7 +3,7 @@ export interface Phrase {
   text: string
 }
 
-/** IEEE Harvard Sentences, List 1 — phonetically balanced, standard for voice work. */
+/** IEEE Harvard Sentences, Lists 1–4 — phonetically balanced, about two minutes spoken. */
 export const HARVARD_FULL: Phrase[] = [
   { id: 'h01', text: 'The birch canoe slid on the smooth planks.' },
   { id: 'h02', text: 'Glue the sheet to the dark blue background.' },
@@ -15,6 +15,36 @@ export const HARVARD_FULL: Phrase[] = [
   { id: 'h08', text: 'The hogs were fed chopped corn and garbage.' },
   { id: 'h09', text: 'Four hours of steady work faced us.' },
   { id: 'h10', text: 'A large size in stockings is hard to sell.' },
+  { id: 'h11', text: 'The boy was there when the sun rose.' },
+  { id: 'h12', text: 'A rod is used to catch pink salmon.' },
+  { id: 'h13', text: 'The source of the huge river is the clear spring.' },
+  { id: 'h14', text: 'Kick the ball straight and follow through.' },
+  { id: 'h15', text: 'Help the woman get back to her feet.' },
+  { id: 'h16', text: 'A pot of tea helps to pass the evening.' },
+  { id: 'h17', text: 'Smoky fires lack flame and heat.' },
+  { id: 'h18', text: "The soft cushion broke the man's fall." },
+  { id: 'h19', text: 'The salt breeze came across from the sea.' },
+  { id: 'h20', text: 'The girl at the booth sold fifty bonds.' },
+  { id: 'h21', text: 'The small pup gnawed a hole in the sock.' },
+  { id: 'h22', text: 'The fish twisted and turned on the bent hook.' },
+  { id: 'h23', text: 'Press the pants and sew a button on the vest.' },
+  { id: 'h24', text: 'The swan dive was far short of perfect.' },
+  { id: 'h25', text: 'The beauty of the view stunned the young boy.' },
+  { id: 'h26', text: 'Two blue fish swam in the tank.' },
+  { id: 'h27', text: 'Her purse was full of useless trash.' },
+  { id: 'h28', text: 'The colt reared and threw the tall rider.' },
+  { id: 'h29', text: 'It snowed, rained, and hailed the same morning.' },
+  { id: 'h30', text: 'Read verse out loud for pleasure.' },
+  { id: 'h31', text: 'Hoist the load to your left shoulder.' },
+  { id: 'h32', text: 'Take the winding path to reach the lake.' },
+  { id: 'h33', text: 'Note closely the size of the gas tank.' },
+  { id: 'h34', text: 'Wipe the grease off his dirty face.' },
+  { id: 'h35', text: 'Mend the coat before you go out.' },
+  { id: 'h36', text: 'The wrist was badly strained and hung limp.' },
+  { id: 'h37', text: 'The stray cat gave birth to kittens.' },
+  { id: 'h38', text: 'The young girl gave no clear response.' },
+  { id: 'h39', text: 'The meal was cooked before the bell rang.' },
+  { id: 'h40', text: 'What joy there is in living.' },
 ]
 
 /** Three-sentence set that still covers a useful mix of vowels and consonants. */
