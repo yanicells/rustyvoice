@@ -180,6 +180,38 @@ export async function concatWavs(ffmpegPath: string, inputs: string[], outPath: 
   if (code !== 0) throw new Error(stderr.trim() || 'ffmpeg concat failed')
 }
 
+export async function trimWav(
+  ffmpegPath: string,
+  src: string,
+  dest: string,
+  durationSec: number,
+): Promise<void> {
+  const proc = Bun.spawn(
+    [
+      ffmpegPath,
+      '-hide_banner',
+      '-loglevel',
+      'error',
+      '-y',
+      '-i',
+      src,
+      '-t',
+      durationSec.toFixed(2),
+      '-ac',
+      '1',
+      '-ar',
+      '48000',
+      '-c:a',
+      'pcm_s16le',
+      dest,
+    ],
+    { stdout: 'ignore', stderr: 'pipe' },
+  )
+  const stderr = await readOutput(proc.stderr)
+  const code = await proc.exited
+  if (code !== 0) throw new Error(stderr.trim() || 'ffmpeg trim failed')
+}
+
 export async function importWav(ffmpegPath: string, src: string, dest: string): Promise<void> {
   const proc = Bun.spawn(
     [ffmpegPath, '-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-ac', '1', '-ar', '48000', '-c:a', 'pcm_s16le', dest],

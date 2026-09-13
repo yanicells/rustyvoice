@@ -12,7 +12,8 @@ import {
   saveStudio,
   upsertVoice,
 } from './lib/store'
-import { modelStatus, synthesize } from './lib/tts'
+import { busyLabelFromLog } from './lib/prompt'
+import { modelStatus, prepareClonePrompt, synthesize } from './lib/tts'
 import type { GenerationMode, Page, StudioData, Voice } from './types'
 import { C } from './theme'
 import { Banner } from './ui/primitives'
@@ -65,14 +66,17 @@ export function App() {
     setFlash(null)
     setLogLine('')
     try {
+      const prompt =
+        input.mode === 'clone' && voice ? await prepareClonePrompt(data.settings, voice) : undefined
       const result = await synthesize(data.settings, {
         text: spoken,
         outPath,
-        referencePath: input.mode === 'clone' ? voice?.referencePath : undefined,
-        promptText: input.mode === 'clone' ? voice?.promptText : undefined,
+        referencePath: prompt?.referencePath,
+        promptText: prompt?.promptText,
         onLog: (line) => {
-          if (/Loading|Generating|Elapsed|Audio:/i.test(line)) {
-            setBusy(line.replace(/^.*\]\s*/, '').slice(0, 80))
+          const label = busyLabelFromLog(line)
+          if (label) {
+            setBusy(label)
             setLogLine(line)
           }
         },

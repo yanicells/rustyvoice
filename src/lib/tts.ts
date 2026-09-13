@@ -1,6 +1,10 @@
 import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
-import type { Settings } from '../types'
+import type { Settings, Voice } from '../types'
+import { concatWavs, trimWav, wavDurationSec } from './audio'
+import { voiceDir } from './paths'
+import { PROMPT_MAX_SEC, formatCliFailure, promptTextForTakes, selectPromptTakes } from './prompt'
 
 export interface SynthesizeInput {
   text: string
@@ -58,8 +62,7 @@ export async function synthesize(settings: Settings, input: SynthesizeInput): Pr
   ])
   const log = `${stdout}\n${stderr}`.trim()
   if (code !== 0) {
-    const last = log.split('\n').filter(Boolean).slice(-6).join('\n')
-    throw new Error(last || `voxcpm2-cli exited ${code}`)
+    throw new Error(formatCliFailure(log, code))
   }
   if (!existsSync(input.outPath)) throw new Error('Synthesis finished without a WAV file')
   return { elapsedMs: Date.now() - started, log }
@@ -78,4 +81,31 @@ async function streamLines(
     }
   }
   return text
+}
+
+export async function prepareClonePrompt(
+  settings: Settings,
+  voice: Voice,
+): Promise<{ referencePath: string; promptText?: string }> {
+  const outPath = join(voiceDir(voice.id), 'prompt.wav')
+  if (voice.takes.length > 0) {
+    const selected = selectPromptTakes(voice.takes)
+    const text = promptTextForTakes(selected)
+    const total = selected.reduce((sum, take) => sum + take.durationSec, 0)
+    if (selected.length === voice.takes.length && total <= PROMPT_MAX_SEC) {
+      return { referencePath: voice.referencePath, promptText: voice.promptText.trim() || text || undefined }
+    }
+    await concatWavs(
+      settings.ffmpegPath,
+      selected.map((take) => take.path),
+      outPath,
+    )
+    return { referencePath: outPath, promptText: text || undefined }
+  }
+  const duration = voice.durationSec || wavDurationSec(voice.referencePath)
+  if (duration > PROMPT_MAX_SEC) {
+    await trimWav(settings.ffmpegPath, voice.referencePath, outPath, PROMPT_MAX_SEC)
+    return { referencePath: outPath }
+  }
+  return { referencePath: voice.referencePath, promptText: voice.promptText.trim() || undefined }
 }
