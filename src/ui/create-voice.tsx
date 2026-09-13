@@ -150,7 +150,7 @@ export function CreateVoicePage({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <text style={{ fontSize: 22, fontWeight: 500, color: C.text }}>Record a reference</text>
                 <text style={{ fontSize: 13.5, lineHeight: 20, color: C.secondary, whiteSpace: 'normal' }}>
-                  Read Harvard sentences in a quiet room, one line at a time. Quick is three lines. Full is four IEEE lists, about two minutes.
+                  Read Harvard sentences in a quiet room, one line at a time. Quick is three lines. Full records more for coverage; VoxCPM2 still clones from about 25 seconds.
                 </text>
               </div>
               <Field label="Name" value={name} placeholder="Voice name" onChange={setName} />
@@ -163,7 +163,7 @@ export function CreateVoicePage({
                 />
                 <ScriptCard
                   title="Full"
-                  body="40 sentences · about 2 minutes"
+                  body="40 sentences · model uses ~25s"
                   active={script === 'full'}
                   onClick={() => setScript('full')}
                 />
