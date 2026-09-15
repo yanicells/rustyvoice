@@ -13,7 +13,7 @@ Hot reload remounts React in the same window. Close the red traffic light to qui
 
 ## Use
 
-1. **Voices → Record** — name the voice, pick Quick or Full, then read the Harvard paragraphs in one take.
+1. **Voices → Record** — name the voice, pick Quick, Paragraph, or Sentences, then read the Harvard script.
 2. **Speak** — select a voice, type, Enter. Clone uses your reference. Design describes a voice in parentheses with no clip.
 3. Import a WAV if you already have a clean recording.
 

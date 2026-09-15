@@ -113,7 +113,7 @@ test('voices page keeps Speak on the card', () => {
   expect(text).toContain('Speak')
 })
 
-test('record setup stacks script cards as Quick and Full', () => {
+test('record setup offers Quick, Paragraph, and Sentences', () => {
   const { render, renderer } = createTestRoot()
   render(
     <CreateVoicePage
@@ -127,7 +127,7 @@ test('record setup stacks script cards as Quick and Full', () => {
   const text = renderer.getPaintedText().join(' ')
   expect(text).toContain('Record a reference')
   expect(text).toContain('Quick')
-  expect(text).toContain('Full')
+  expect(text).toContain('Paragraph')
+  expect(text).toContain('Sentences')
   expect(text).toContain('Start recording')
-  expect(text).toContain('one take')
 })

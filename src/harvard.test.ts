@@ -30,9 +30,11 @@ test('joinPromptText concatenates recorded lines', () => {
 
 test('paragraph scripts still carry every Harvard sentence', () => {
   expect(paragraphsFor('quick')).toHaveLength(1)
-  expect(paragraphsFor('full')).toHaveLength(4)
+  expect(paragraphsFor('page')).toHaveLength(4)
+  expect(paragraphsFor('lines')).toEqual([])
+  expect(phrasesFor('lines')).toEqual(HARVARD_FULL)
   const quick = fold(joinParagraphs(paragraphsFor('quick')))
-  const full = fold(joinParagraphs(paragraphsFor('full')))
+  const full = fold(joinParagraphs(paragraphsFor('page')))
   for (const phrase of HARVARD_QUICK) {
     expect(quick).toContain(fold(phrase.text))
   }
@@ -42,5 +44,5 @@ test('paragraph scripts still carry every Harvard sentence', () => {
 })
 
 test('firstPromptSlice is the opening paragraph', () => {
-  expect(firstPromptSlice(joinParagraphs(paragraphsFor('full')))).toBe(paragraphsFor('full')[0])
+  expect(firstPromptSlice(joinParagraphs(paragraphsFor('page')))).toBe(paragraphsFor('page')[0])
 })
