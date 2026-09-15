@@ -50,7 +50,7 @@ export const HARVARD_FULL: Phrase[] = [
 /** Three-sentence set that still covers a useful mix of vowels and consonants. */
 export const HARVARD_QUICK: Phrase[] = HARVARD_FULL.slice(0, 3)
 
-export type ScriptId = 'quick' | 'full'
+export type ScriptId = 'quick' | 'page' | 'lines'
 
 export function phrasesFor(script: ScriptId): Phrase[] {
   return script === 'quick' ? HARVARD_QUICK : HARVARD_FULL
@@ -73,7 +73,13 @@ export const HARVARD_FULL_PARAS: string[] = [
 ]
 
 export function paragraphsFor(script: ScriptId): string[] {
-  return script === 'quick' ? HARVARD_QUICK_PARAS : HARVARD_FULL_PARAS
+  if (script === 'quick') return HARVARD_QUICK_PARAS
+  if (script === 'page') return HARVARD_FULL_PARAS
+  return []
+}
+
+export function isLineScript(script: ScriptId): boolean {
+  return script === 'lines'
 }
 
 export function joinParagraphs(paragraphs: string[]): string {
